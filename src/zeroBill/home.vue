@@ -1,13 +1,16 @@
 <template>
     <div>
-        <el-row>
+        <!-- <div>
+            {{ this.data1 }}
+        </div> -->
+        <!-- <el-row>
             <el-col :span="12">
                 <div id="myChart" class="chartColumn"></div>
             </el-col>
             <el-col :span="12">
                 <div id="myChart1" class="chartColumn"></div>
             </el-col>
-        </el-row>
+        </el-row> -->
         <el-row>
             <el-col :span="12">
                 <div id="myChart2" class="chartColumn"></div>
@@ -22,35 +25,94 @@
 export default {
     data(){
         return {
-            aa: 'ssssss'
+            websock: null,
+            data1: [4, 42, 42, 5, 6, 42],
+            myChart2: {},
+            myChart2_Option: {},
         }
     },
     mounted() {
         this.drawLine()
+        this.initWebSocket()
     },
     methods: {
+        initWebSocket(){ //初始化weosocket
+            //ws地址
+            var wsuri = "ws:////localhost:8090/ws/asset";
+            this.websock = new WebSocket(wsuri);
+            var self = this
+            this.websock.onmessage = function(e){
+                self.websocketonmessage(e);
+            } 
+            this.websock.onclose = function(e){
+                // websocketclose(e);
+                 console.log("connection closed (" + e.code + ")");
+            }
+            this.websock.onopen = function () {
+                // websocketOpen();
+                 console.log("连接成功");
+            }
+
+            //连接发生错误的回调方法
+            this.websock.onerror = function () {
+                console.log("WebSocket连接发生错误");
+            }
+        },
+        websocketonmessage(e) {
+            try
+            {
+                let data = JSON.parse(e.data)
+                let product = data['product']
+                let area = data['area']
+                if (product) this.data1 = product
+                if (area) this.data2 = area
+            
+                
+
+            }
+            catch(err){
+                console.error(err)
+            }
+        },
         drawLine(){
-            // 基于准备好的dom，初始化echarts实例
-            let myChart = this.$echarts.init(document.getElementById('myChart'))
-            // 绘制图表
-            myChart.setOption({
-                title: { text: '' },
-                tooltip: {},
-                xAxis: {
-                    data: ["衬衫","羊毛衫","雪纺衫","裤子","高跟鞋","袜子"]
-                },
-                yAxis: {},
-                series: [{
-                    name: '销量',
-                    type: 'bar',
-                    data: [5, 20, 36, 10, 10, 20]
-                }]
-            });
+            // // 基于准备好的dom，初始化echarts实例
+            // let myChart = this.$echarts.init(document.getElementById('myChart'))
+            // // 绘制图表
+            // myChart.setOption({
+            //     title: { text: '' },
+            //     tooltip: {},
+            //     xAxis: {
+            //         data: ["衬衫","羊毛衫","雪纺衫","裤子","高跟鞋","袜子"]
+            //     },
+            //     yAxis: {},
+            //     series: [{
+            //         name: '销量',
+            //         type: 'bar',
+            //         data: [5, 20, 36, 10, 10, 20]
+            //     }]
+            // });
 
+            // // 基于准备好的dom，初始化echarts实例
+            // let myChart1 = this.$echarts.init(document.getElementById('myChart1'))
+            // // 绘制图表
+            // myChart1.setOption({
+            //     title: { text: '' },
+            //     tooltip: {},
+            //     xAxis: {
+            //         data: ["衬衫","羊毛衫","雪纺衫","裤子","高跟鞋","袜子"]
+            //     },
+            //     yAxis: {},
+            //     series: [{
+            //         name: '销量',
+            //         type: 'bar',
+            //         data: [5, 20, 36, 10, 10, 20]
+            //     }]
+            // });
             // 基于准备好的dom，初始化echarts实例
-            let myChart1 = this.$echarts.init(document.getElementById('myChart1'))
+            this.myChart2 = this.$echarts.init(document.getElementById('myChart2'))
+           
             // 绘制图表
-            myChart1.setOption({
+            this.myChart2_Option = {
                 title: { text: '' },
                 tooltip: {},
                 xAxis: {
@@ -60,33 +122,18 @@ export default {
                 series: [{
                     name: '销量',
                     type: 'bar',
-                    data: [5, 20, 36, 10, 10, 20]
+                    data: this.data1
                 }]
-            });
-
-            // 基于准备好的dom，初始化echarts实例
-            let myChart2 = this.$echarts.init(document.getElementById('myChart2'))
-            // 绘制图表
-            myChart2.setOption({
-                title: { text: '' },
-                tooltip: {},
-                xAxis: {
-                    data: ["衬衫","羊毛衫","雪纺衫","裤子","高跟鞋","袜子"]
-                },
-                yAxis: {},
-                series: [{
-                    name: '销量',
-                    type: 'bar',
-                    data: [5, 20, 36, 10, 10, 20]
-                }]
-            });
+            }
+            console.log(this.myChart2_Option)
+            this.myChart2.setOption(this.myChart2_Option);
 
             // 基于准备好的dom，初始化echarts实例
             let myChart3 = this.$echarts.init(document.getElementById('myChart3'))
         
             let option = {
                 title: {
-                    text: '堆叠区域图'
+                    // text: '堆叠区域图'
                 },
                 tooltip : {
                     trigger: 'axis'
@@ -164,6 +211,15 @@ export default {
             // 绘制图表
             myChart3.setOption(option);
         }
+    },
+    watch: {
+        //观察option的变化
+      data1: {
+        handler(newVal, oldVal) {
+          this.drawLine()
+        },
+        deep: true //对象内部属性的监听，关键。
+      }
     }
 }
 </script>
